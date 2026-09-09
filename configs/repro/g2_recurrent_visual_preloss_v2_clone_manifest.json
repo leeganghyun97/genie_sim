@@ -27,6 +27,7 @@
     "configs/model/g2_recurrent_visual_preloss_v2.json",
     "configs/repro/g2_recurrent_visual_preloss_v2_environment.json",
     "scripts/run_g2_recurrent_visual_teacher_supervisor.sh",
+    "scripts/train_g2_recurrent_student.py",
     "scripts/run_g2_recurrent_visual_teacher_preloss_v2.sh",
     "scripts/publish_g2_preloss_v2_branch.sh",
     "scripts/diagnostics/run_g2_recurrent_visual_teacher_supervisor.py",
