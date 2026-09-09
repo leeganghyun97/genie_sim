@@ -37,6 +37,12 @@ G2_RECURRENT_VISUAL_POLICY_SCHEMA = "g2_rgbd_gated_cross_camera_fusion_gru_polic
 G2_CAMERA_ENCODER_PROFILES = {
     "baseline_4layer": (32, 64, 96, 128),
     "cnn5_160": (32, 64, 96, 128, 160),
+    "cnn7_160": (32, 64, 96, 128, 160, 160, 160),
+    "cnn9_160": (32, 64, 96, 128, 160, 160, 160, 160, 160),
+    "cnn11_160": (32, 64, 96, 128, 160, 160, 160, 160, 160, 160, 160),
+    "cnn13_160": (
+        32, 64, 96, 128, 160, 160, 160, 160, 160, 160, 160, 160, 160
+    ),
 }
 G2_STUDENT_FAILURE_CLASSES = (
     "miss", "contact", "stable_grasp", "slip", "collision", "lift", "place"
@@ -937,6 +943,22 @@ def random_shift_rgbd_sequences(
     )
 
 
+class _CameraRefinementStage(nn.Module):
+    """One convolutional stage with a shape-safe residual connection."""
+
+    def __init__(self, input_channels: int, output_channels: int) -> None:
+        super().__init__()
+        self.convolution = nn.Conv2d(
+            input_channels, output_channels, kernel_size=3, stride=1, padding=1
+        )
+        self.activation = nn.SiLU()
+        self.residual = input_channels == output_channels
+
+    def forward(self, value: torch.Tensor) -> torch.Tensor:
+        refined = self.activation(self.convolution(value))
+        return value + refined if self.residual else refined
+
+
 def _camera_encoder(
     input_channels: int,
     latent_dim: int,
@@ -951,10 +973,13 @@ def _camera_encoder(
         # Four stride-2 stages preserve the established 48x64 -> 3x4 feature
         # geometry.  Optional later stages enrich capacity without changing
         # the visual embedding or GRU interface.
+        if index >= 4:
+            layers.append(_CameraRefinementStage(previous, output))
+            previous = output
+            continue
         kernel = 5 if index == 0 else 3
-        stride = 2 if index < 4 else 1
         padding = 2 if index == 0 else 1
-        layers.extend((nn.Conv2d(previous, output, kernel, stride, padding), nn.SiLU()))
+        layers.extend((nn.Conv2d(previous, output, kernel, 2, padding), nn.SiLU()))
         previous = output
     layers.extend(
         (

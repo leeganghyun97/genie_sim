@@ -914,6 +914,28 @@ def test_cnn5_encoder_is_heavier_without_changing_visual_contract():
     assert contract.serializable()["camera_encoder_channels"] == [32, 64, 96, 128, 160]
 
 
+@pytest.mark.parametrize(
+    ("profile", "layers_per_encoder"),
+    (("cnn7_160", 7), ("cnn9_160", 9), ("cnn11_160", 11), ("cnn13_160", 13)),
+)
+def test_deep_camera_encoder_profiles_preserve_output_contract(
+    profile, layers_per_encoder
+):
+    encoder = G2TaskRelevantVisualEncoder(
+        encoder_channels=G2_CAMERA_ENCODER_PROFILES[profile]
+    )
+    convolution_count = sum(
+        isinstance(module, torch.nn.Conv2d) for module in encoder.modules()
+    )
+    assert convolution_count == 4 * layers_per_encoder
+    rgbd = torch.randint(0, 256, (1, 2, 6, 48, 64), dtype=torch.uint8)
+    assert encoder.encode(rgbd).shape == (1, 64)
+    contract = G2RecurrentVisualPolicyContract(
+        camera_encoder_channels=G2_CAMERA_ENCODER_PROFILES[profile]
+    ).validated()
+    assert len(contract.serializable()["camera_encoder_channels"]) == layers_per_encoder
+
+
 def test_recurrent_student_padding_does_not_advance_hidden_state():
     torch.manual_seed(17)
     model = G2RecurrentVisualStudent(hidden_dim=16)

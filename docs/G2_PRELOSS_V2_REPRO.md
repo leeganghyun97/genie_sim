@@ -76,6 +76,14 @@ overrides to the model, augmentation, and auxiliary-loss settings that define
 this comparison. Runtime scale options such as `--num-envs` and
 `--total-transitions` can still be lowered for a smoke test.
 
+The general Teacher and offline Student entrypoints additionally expose
+`baseline_4layer`, `cnn5_160`, `cnn7_160`, `cnn9_160`, `cnn11_160`, and
+`cnn13_160`. Only the first four layers downsample. Layers 5 onward operate on
+the established 3x4 feature map and use shape-safe residual refinement when
+their input/output widths match. The pre-loss recipe defaults to `cnn5_160`,
+but permits only this architecture axis to be overridden for controlled depth
+ablations, for example `--camera-encoder-profile cnn9_160`.
+
 To inspect the fully resolved child command without starting Isaac Sim:
 
 ```bash

@@ -3,6 +3,7 @@ set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 dataset_cli_present=false
+camera_encoder_cli_present=false
 
 for argument in "$@"; do
   case "${argument}" in
@@ -13,8 +14,10 @@ for argument in "$@"; do
     --demonstration-dataset|--demonstration-dataset=*)
       dataset_cli_present=true
       ;;
+    --camera-encoder-profile|--camera-encoder-profile=*)
+      camera_encoder_cli_present=true
+      ;;
     --recurrent-profile|--recurrent-profile=*|--batch-size|--batch-size=*|\
-    --camera-encoder-profile|--camera-encoder-profile=*|\
     --random-shift-pad|--random-shift-pad=*|\
     --relative-pose-weight|--relative-pose-weight=*|\
     --pose-consistency-weight|--pose-consistency-weight=*|\
@@ -48,9 +51,14 @@ if [[ ${#dataset_arguments[@]} -eq 0 && "${dataset_cli_present}" != true ]]; the
   exit 2
 fi
 
+camera_encoder_arguments=()
+if [[ "$camera_encoder_cli_present" != true ]]; then
+  camera_encoder_arguments+=(--camera-encoder-profile cnn5_160)
+fi
+
 command=("${repository_root}/scripts/run_g2_recurrent_visual_teacher_supervisor.sh" \
   --recurrent-profile legacy_256x16 \
-  --camera-encoder-profile cnn5_160 \
+  "${camera_encoder_arguments[@]}" \
   --num-envs 25 \
   --total-transitions 25000000 \
   --episode-horizon-steps 1600 \

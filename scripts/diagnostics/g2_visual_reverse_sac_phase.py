@@ -2800,7 +2800,14 @@ def main():
     )
     parser.add_argument(
         "--camera-encoder-profile",
-        choices=("baseline_4layer", "cnn5_160"),
+        choices=(
+            "baseline_4layer",
+            "cnn5_160",
+            "cnn7_160",
+            "cnn9_160",
+            "cnn11_160",
+            "cnn13_160",
+        ),
         default="baseline_4layer",
     )
     parser.add_argument("--output", type=Path, required=True); parser.add_argument("--num-envs", type=int, default=4)
