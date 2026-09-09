@@ -28,6 +28,7 @@
     "configs/repro/g2_recurrent_visual_preloss_v2_environment.json",
     "scripts/run_g2_recurrent_visual_teacher_supervisor.sh",
     "scripts/run_g2_recurrent_visual_teacher_preloss_v2.sh",
+    "scripts/publish_g2_preloss_v2_branch.sh",
     "scripts/diagnostics/run_g2_recurrent_visual_teacher_supervisor.py",
     "scripts/diagnostics/g2_visual_reverse_sac_phase.py",
     "scripts/check_g2_preloss_v2_clone_readiness.py"

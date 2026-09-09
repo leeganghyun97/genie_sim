@@ -24,6 +24,15 @@ baseline weights. "Pre-loss" only disables the two later experimental losses.
 
 ## Clone and verify
 
+Publish the prepared branch to a user-owned fork. The helper refuses the
+upstream `origin` URL and includes the referenced Git LFS objects through the
+pre-push hook:
+
+```bash
+bash scripts/publish_g2_preloss_v2_branch.sh \
+  --fork-url git@github.com:YOUR_ACCOUNT/genie_sim.git
+```
+
 Clone the reproducibility branch and fetch the binary USD layers:
 
 ```bash
