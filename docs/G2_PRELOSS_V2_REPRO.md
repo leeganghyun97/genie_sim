@@ -8,12 +8,18 @@ without loading its old actor, critics, optimizer, or replay. The historical
 SHA-256 0aa8f2d381b527617dcae51169319b923e9ad1a76538e2c7b31e8820cb9dc18e
 ```
 
-The fresh recipe is sealed by
+The historical checkpoint used four convolution layers per RGB/depth encoder.
+The fresh recipe uses the slightly heavier `cnn5_160` profile: a stride-1
+`128 -> 160` convolution is appended after the established four downsampling
+stages. This increases the independent head/wrist RGB/depth encoder total from
+16 to 20 convolution layers while preserving the 64-D visual output and the
+GRU/action interfaces. The fresh recipe is sealed by
 `configs/model/g2_recurrent_visual_preloss_v2.json`:
 
 - GRU hidden/layers: `256/1`
 - sequence/burn-in/stride: `16/4/12`
 - gradient clip/batch: `5.0/64`
+- CNN channels per encoder: `32/64/96/128/160` (`5` layers)
 - temporally consistent RGB-D shift: `2 px`
 - cross-camera contrastive loss: `0`
 - temporal pose-residual loss: `0`

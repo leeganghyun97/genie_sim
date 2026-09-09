@@ -1,6 +1,6 @@
 {
   "schema": "geniesim_g2_recurrent_visual_training_recipe_v1",
-  "name": "preloss_v2_gru256x16_fresh",
+  "name": "preloss_v2_cnn5_gru256x16_fresh",
   "purpose": "Reproduce the strongest strict-lift 4x4x6 baseline without the two experimental visual losses",
   "initialization": {
     "fresh_actor": true,
@@ -11,6 +11,10 @@
   },
   "model": {
     "recurrent_profile": "legacy_256x16",
+    "camera_encoder_profile": "cnn5_160",
+    "camera_encoder_channels": [32, 64, 96, 128, 160],
+    "convolution_layers_per_encoder": 5,
+    "convolution_layers_total": 20,
     "hidden_dim": 256,
     "gru_layers": 1,
     "sequence_length": 16,

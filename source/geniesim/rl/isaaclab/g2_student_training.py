@@ -396,6 +396,7 @@ class G2StudentTrainingConfig:
     depth_validity_loss_weight: float = 0.05
     failure_loss_weight: float = 0.1
     share_camera_encoder_weights: bool = False
+    camera_encoder_channels: tuple[int, ...] = (32, 64, 96, 128)
     torso_control_enabled: bool = False
     random_shift_pad: int = 4
     seed: int = 42
@@ -465,6 +466,7 @@ class G2StudentTrainingConfig:
             depth_validity_loss_weight=self.depth_validity_loss_weight,
             failure_loss_weight=self.failure_loss_weight,
             share_camera_encoder_weights=self.share_camera_encoder_weights,
+            camera_encoder_channels=self.camera_encoder_channels,
             torso_control_enabled=self.torso_control_enabled,
         )
 

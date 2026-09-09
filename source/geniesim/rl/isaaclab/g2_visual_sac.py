@@ -33,7 +33,11 @@ G2_VISUAL_ACTION_DIM = 7
 G2_VISUAL_ARM_ACTION_DIM = 6
 G2_VISUAL_GRIPPER_ACTION_INDEX = 6
 G2_RECURRENT_STUDENT_SCHEMA = "g2_rgbd_gated_cross_camera_gru_student_v9"
-G2_RECURRENT_VISUAL_POLICY_SCHEMA = "g2_rgbd_gated_cross_camera_fusion_gru_policy_v4"
+G2_RECURRENT_VISUAL_POLICY_SCHEMA = "g2_rgbd_gated_cross_camera_fusion_gru_policy_v5"
+G2_CAMERA_ENCODER_PROFILES = {
+    "baseline_4layer": (32, 64, 96, 128),
+    "cnn5_160": (32, 64, 96, 128, 160),
+}
 G2_STUDENT_FAILURE_CLASSES = (
     "miss", "contact", "stable_grasp", "slip", "collision", "lift", "place"
 )
@@ -443,6 +447,9 @@ class G2RecurrentVisualPolicyContract:
     sequence_length: int = 16
     burn_in_steps: int = 4
     sequence_stride: int = 12
+    camera_encoder_channels: tuple[int, ...] = G2_CAMERA_ENCODER_PROFILES[
+        "baseline_4layer"
+    ]
 
     def validated(self) -> "G2RecurrentVisualPolicyContract":
         if self.camera_shape != (2, 6, 48, 64):
@@ -457,6 +464,8 @@ class G2RecurrentVisualPolicyContract:
             raise ValueError("visual policy burn-in must be inside the sequence")
         if not 0 < self.sequence_stride <= self.sequence_length:
             raise ValueError("visual policy sequence stride must be in [1, sequence_length]")
+        if tuple(self.camera_encoder_channels) not in G2_CAMERA_ENCODER_PROFILES.values():
+            raise ValueError("unknown camera encoder channel contract")
         return self
 
     def serializable(self) -> dict[str, object]:
@@ -473,7 +482,7 @@ class G2RecurrentVisualPolicyContract:
             "burn_in_steps": self.burn_in_steps,
             "sequence_stride": self.sequence_stride,
             "backbone": "SPLIT_RGB_DEPTH_GATED_HEAD_WRIST_CROSS_ATTENTION_GRU",
-            "camera_encoder_channels": [32, 64, 96, 128],
+            "camera_encoder_channels": list(self.camera_encoder_channels),
             "camera_fusion": "PER_CAMERA_RGB_DEPTH_GATE_THEN_2_TOKEN_ATTENTION",
             "training_auxiliary_objectives": [
                 "CROSS_CAMERA_SYMMETRIC_INFONCE",
@@ -928,14 +937,33 @@ def random_shift_rgbd_sequences(
     )
 
 
-def _camera_encoder(input_channels: int, latent_dim: int) -> nn.Sequential:
-    return nn.Sequential(
-        nn.Conv2d(input_channels, 32, 5, 2, 2), nn.SiLU(),
-        nn.Conv2d(32, 64, 3, 2, 1), nn.SiLU(),
-        nn.Conv2d(64, 96, 3, 2, 1), nn.SiLU(),
-        nn.Conv2d(96, 128, 3, 2, 1), nn.SiLU(),
-        nn.Flatten(), nn.Linear(128 * 3 * 4, latent_dim), nn.LayerNorm(latent_dim),
+def _camera_encoder(
+    input_channels: int,
+    latent_dim: int,
+    encoder_channels: tuple[int, ...],
+) -> nn.Sequential:
+    channels = tuple(int(value) for value in encoder_channels)
+    if channels not in G2_CAMERA_ENCODER_PROFILES.values():
+        raise ValueError("camera encoder channels must use a registered profile")
+    layers: list[nn.Module] = []
+    previous = int(input_channels)
+    for index, output in enumerate(channels):
+        # Four stride-2 stages preserve the established 48x64 -> 3x4 feature
+        # geometry.  Optional later stages enrich capacity without changing
+        # the visual embedding or GRU interface.
+        kernel = 5 if index == 0 else 3
+        stride = 2 if index < 4 else 1
+        padding = 2 if index == 0 else 1
+        layers.extend((nn.Conv2d(previous, output, kernel, stride, padding), nn.SiLU()))
+        previous = output
+    layers.extend(
+        (
+            nn.Flatten(),
+            nn.Linear(channels[-1] * 3 * 4, latent_dim),
+            nn.LayerNorm(latent_dim),
+        )
     )
+    return nn.Sequential(*layers)
 
 
 class G2TaskRelevantVisualEncoder(nn.Module):
@@ -952,17 +980,29 @@ class G2TaskRelevantVisualEncoder(nn.Module):
         latent_per_modality: int = 64,
         output_dim: int = 64,
         share_camera_encoder_weights: bool = False,
+        encoder_channels: tuple[int, ...] = G2_CAMERA_ENCODER_PROFILES[
+            "baseline_4layer"
+        ],
     ) -> None:
         super().__init__()
         self.latent_per_modality = int(latent_per_modality)
         self.output_dim = int(output_dim)
         self.share_camera_encoder_weights = bool(share_camera_encoder_weights)
+        self.encoder_channels = tuple(int(value) for value in encoder_channels)
+        if self.encoder_channels not in G2_CAMERA_ENCODER_PROFILES.values():
+            raise ValueError("unknown camera encoder profile")
         camera_count = 1 if self.share_camera_encoder_weights else 2
         self.rgb_encoders = nn.ModuleList(
-            [_camera_encoder(3, self.latent_per_modality) for _ in range(camera_count)]
+            [
+                _camera_encoder(3, self.latent_per_modality, self.encoder_channels)
+                for _ in range(camera_count)
+            ]
         )
         self.depth_encoders = nn.ModuleList(
-            [_camera_encoder(2, self.latent_per_modality) for _ in range(camera_count)]
+            [
+                _camera_encoder(2, self.latent_per_modality, self.encoder_channels)
+                for _ in range(camera_count)
+            ]
         )
         self.camera_gates = nn.ModuleList(
             [nn.Linear(2 * self.latent_per_modality, self.latent_per_modality) for _ in range(2)]
@@ -1147,6 +1187,9 @@ class G2VisualSACConfig:
     contact_weight: float = 0.1
     depth_validity_weight: float = 0.05
     share_camera_encoder_weights: bool = False
+    camera_encoder_channels: tuple[int, ...] = G2_CAMERA_ENCODER_PROFILES[
+        "baseline_4layer"
+    ]
     gradient_clip: float = 5.0
 
     @property
@@ -1171,7 +1214,8 @@ class G2VisualAsymmetricSAC:
         self.config = config or G2VisualSACConfig()
         self.device = torch.device(device)
         self.visual = G2TaskRelevantVisualEncoder(
-            share_camera_encoder_weights=self.config.share_camera_encoder_weights
+            share_camera_encoder_weights=self.config.share_camera_encoder_weights,
+            encoder_channels=self.config.camera_encoder_channels,
         ).to(self.device)
         self.actor = _VisualActor(64 + G2_VISUAL_PROPRIO_DIM, G2_VISUAL_ACTION_DIM).to(self.device)
         self.relative_pose_head = nn.Sequential(
@@ -1398,11 +1442,15 @@ class G2RecurrentVisualStudent(nn.Module):
         depth_validity_loss_weight: float = 0.05,
         failure_loss_weight: float = 0.1,
         share_camera_encoder_weights: bool = False,
+        camera_encoder_channels: tuple[int, ...] = G2_CAMERA_ENCODER_PROFILES[
+            "baseline_4layer"
+        ],
         torso_control_enabled: bool = False,
     ) -> None:
         super().__init__()
         self.visual = G2TaskRelevantVisualEncoder(
-            share_camera_encoder_weights=share_camera_encoder_weights
+            share_camera_encoder_weights=share_camera_encoder_weights,
+            encoder_channels=camera_encoder_channels,
         )
         self.cross_camera_projection = nn.Sequential(
             nn.Linear(self.visual.latent_per_modality, 64),
@@ -1931,6 +1979,7 @@ class _RecurrentVisualActor(nn.Module):
                 config.temporal_pose_residual_rotation_weight
             ),
             share_camera_encoder_weights=config.share_camera_encoder_weights,
+            camera_encoder_channels=config.camera_encoder_channels,
             torso_control_enabled=False,
         )
         self.mean = nn.Linear(config.hidden_dim, G2_VISUAL_ARM_ACTION_DIM)

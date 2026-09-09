@@ -14,6 +14,7 @@ for argument in "$@"; do
       dataset_cli_present=true
       ;;
     --recurrent-profile|--recurrent-profile=*|--batch-size|--batch-size=*|\
+    --camera-encoder-profile|--camera-encoder-profile=*|\
     --random-shift-pad|--random-shift-pad=*|\
     --relative-pose-weight|--relative-pose-weight=*|\
     --pose-consistency-weight|--pose-consistency-weight=*|\
@@ -49,6 +50,7 @@ fi
 
 command=("${repository_root}/scripts/run_g2_recurrent_visual_teacher_supervisor.sh" \
   --recurrent-profile legacy_256x16 \
+  --camera-encoder-profile cnn5_160 \
   --num-envs 25 \
   --total-transitions 25000000 \
   --episode-horizon-steps 1600 \

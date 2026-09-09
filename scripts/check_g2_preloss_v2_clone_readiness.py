@@ -40,6 +40,10 @@ def main() -> int:
 
     expected_recipe = {
         "recurrent_profile": "legacy_256x16",
+        "camera_encoder_profile": "cnn5_160",
+        "camera_encoder_channels": [32, 64, 96, 128, 160],
+        "convolution_layers_per_encoder": 5,
+        "convolution_layers_total": 20,
         "hidden_dim": 256,
         "sequence_length": 16,
         "burn_in_steps": 4,

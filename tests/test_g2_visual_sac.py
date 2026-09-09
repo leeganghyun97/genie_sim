@@ -5,6 +5,7 @@ import pytest
 import torch
 
 from geniesim.rl.isaaclab.g2_visual_sac import (
+    G2_CAMERA_ENCODER_PROFILES,
     G2_DEMONSTRATION_PHASES,
     G2_ONLINE_REPLAY_PHASES,
     G2EpisodeReferenceBehavior,
@@ -889,6 +890,28 @@ def test_student_observation_and_camera_weight_sharing_are_explicit():
     shared = G2TaskRelevantVisualEncoder(share_camera_encoder_weights=True)
     assert len(independent.rgb_encoders) == len(independent.depth_encoders) == 2
     assert len(shared.rgb_encoders) == len(shared.depth_encoders) == 1
+
+
+def test_cnn5_encoder_is_heavier_without_changing_visual_contract():
+    baseline = G2TaskRelevantVisualEncoder(
+        encoder_channels=G2_CAMERA_ENCODER_PROFILES["baseline_4layer"]
+    )
+    heavier = G2TaskRelevantVisualEncoder(
+        encoder_channels=G2_CAMERA_ENCODER_PROFILES["cnn5_160"]
+    )
+    baseline_conv = sum(isinstance(module, torch.nn.Conv2d) for module in baseline.modules())
+    heavier_conv = sum(isinstance(module, torch.nn.Conv2d) for module in heavier.modules())
+    baseline_parameters = sum(parameter.numel() for parameter in baseline.parameters())
+    heavier_parameters = sum(parameter.numel() for parameter in heavier.parameters())
+    assert baseline_conv == 16
+    assert heavier_conv == 20
+    assert heavier_parameters > baseline_parameters
+    rgbd = torch.randint(0, 256, (2, 2, 6, 48, 64), dtype=torch.uint8)
+    assert baseline.encode(rgbd).shape == heavier.encode(rgbd).shape == (2, 64)
+    contract = G2RecurrentVisualPolicyContract(
+        camera_encoder_channels=G2_CAMERA_ENCODER_PROFILES["cnn5_160"]
+    ).validated()
+    assert contract.serializable()["camera_encoder_channels"] == [32, 64, 96, 128, 160]
 
 
 def test_recurrent_student_padding_does_not_advance_hidden_state():

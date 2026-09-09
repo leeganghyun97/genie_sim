@@ -55,6 +55,7 @@ def run(args) -> dict:
         G2RecurrentVisualPolicyContract,
         G2RecurrentVisualReplayBuffer,
         G2RecurrentVisualSACConfig,
+        G2_CAMERA_ENCODER_PROFILES,
         G2_RECURRENT_VISUAL_POLICY_SCHEMA,
         G2_ONLINE_REPLAY_PHASES,
         G2_VISUAL_ARM_ACTION_DIM,
@@ -925,12 +926,16 @@ def run(args) -> dict:
     write_progress("runtime/first_observation", transitions=0, episodes=0, updates=0)
 
     recurrent_profile = load_g2_recurrent_profile(args.recurrent_profile)
+    camera_encoder_channels = G2_CAMERA_ENCODER_PROFILES[
+        args.camera_encoder_profile
+    ]
     recurrent_contract = G2RecurrentVisualPolicyContract(
         hidden_dim=recurrent_profile.hidden_dim,
         gru_num_layers=recurrent_profile.gru_num_layers,
         sequence_length=recurrent_profile.sequence_length,
         burn_in_steps=recurrent_profile.burn_in_steps,
         sequence_stride=recurrent_profile.sequence_stride,
+        camera_encoder_channels=camera_encoder_channels,
     ).validated()
     # One recurrent optimizer batch consumes only the post-burn-in timesteps.
     # Budget replay intensity in transitions, not in sequence objects.
@@ -966,6 +971,7 @@ def run(args) -> dict:
                 args.temporal_pose_residual_rotation_weight
             ),
             share_camera_encoder_weights=args.share_camera_encoder_weights,
+            camera_encoder_channels=camera_encoder_channels,
             hidden_dim=recurrent_contract.hidden_dim,
             gru_num_layers=recurrent_contract.gru_num_layers,
             sequence_length=recurrent_contract.sequence_length,
@@ -2791,6 +2797,11 @@ def main():
         "--recurrent-profile",
         choices=recurrent_profile_names(),
         default=default_recurrent_profile_name(),
+    )
+    parser.add_argument(
+        "--camera-encoder-profile",
+        choices=("baseline_4layer", "cnn5_160"),
+        default="baseline_4layer",
     )
     parser.add_argument("--output", type=Path, required=True); parser.add_argument("--num-envs", type=int, default=4)
     parser.add_argument("--total-transitions", type=int, default=2000); parser.add_argument("--learning-starts", type=int, default=1000)
