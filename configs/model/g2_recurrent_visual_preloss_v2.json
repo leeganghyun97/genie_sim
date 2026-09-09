@@ -1,0 +1,63 @@
+{
+  "schema": "geniesim_g2_recurrent_visual_training_recipe_v1",
+  "name": "preloss_v2_gru256x16_fresh",
+  "purpose": "Reproduce the strongest strict-lift 4x4x6 baseline without the two experimental visual losses",
+  "initialization": {
+    "fresh_actor": true,
+    "fresh_critics": true,
+    "fresh_replay": true,
+    "resume_checkpoint": false,
+    "historical_evaluation_checkpoint_sha256": "0aa8f2d381b527617dcae51169319b923e9ad1a76538e2c7b31e8820cb9dc18e"
+  },
+  "model": {
+    "recurrent_profile": "legacy_256x16",
+    "hidden_dim": 256,
+    "gru_layers": 1,
+    "sequence_length": 16,
+    "burn_in_steps": 4,
+    "sequence_stride": 12,
+    "gradient_clip": 5.0,
+    "batch_size": 64,
+    "random_shift_pad_pixels": 2
+  },
+  "loss": {
+    "relative_pose_weight": 0.2,
+    "pose_consistency_weight": 0.1,
+    "contact_weight": 0.1,
+    "depth_validity_weight": 0.05,
+    "student_head_distillation_weight": 0.1,
+    "cross_camera_contrastive_weight": 0.0,
+    "temporal_pose_residual_weight": 0.0
+  },
+  "demonstration": {
+    "bc_updates": 144,
+    "batch_size": 16,
+    "expert_arm_action_scale": 0.75,
+    "success_augmented_windows": 2000,
+    "failure_augmented_windows": 300,
+    "datasets_are_external": true,
+    "datasets_are_committed_to_git": false,
+    "required_dataset_schema": "g2_keyboard_teacher_rgbd_canonical_xyzw_rotvec_rect_object_v25",
+    "source_sha256": [
+      "e781082ede20825f8af319aa49870f06a37e58d29277dd899ad63ed33d0aa112",
+      "5c8bd3000edc3f8afdc83cf7696aeb069460ad60983bff2817de3c90b7dc055e",
+      "0c7d5737bb0309ae5dde20342880ac64aa208d2d09d98e89704d0e213cdffe75",
+      "c78a4df25fc47f3d31f59973f23c38bdbb7b88cb72c0ca9d323c9d7213961ba9",
+      "01d0bfa3d83e50a63790420619c7f27ef856417e51b0c7353d35fff95816a47a"
+    ]
+  },
+  "runtime": {
+    "num_envs": 25,
+    "total_transitions": 25000000,
+    "episode_horizon_steps": 1600,
+    "learning_starts": 1000,
+    "replay_capacity": 50000,
+    "checkpoint_interval": 2000,
+    "camera_capture_interval_steps": 10,
+    "camera_resolution": [256, 192],
+    "reverse_preroll_max_steps": 160,
+    "curriculum_evaluation_envs": 5,
+    "her_force_sampling_mixture": 0.0,
+    "scripted_reverse_bootstrap": true
+  }
+}

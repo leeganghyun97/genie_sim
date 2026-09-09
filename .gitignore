@@ -46,4 +46,25 @@ logs
 .cache/
 .cache
 
+# Clone-reproducible G2 training contract. Runtime outputs and HDF5 remain
+# ignored, while the hash-pinned robot asset and canonical planner URDF are
+# versioned. Binary USD layers are stored through Git LFS via .gitattributes.
+!source/geniesim/assets/
+!source/geniesim/assets/robot/
+!source/geniesim/assets/robot/G2_omnipicker/
+!source/geniesim/assets/robot/G2_omnipicker/robot_fix.usda
+!source/geniesim/assets/robot/G2_omnipicker/configuration/
+!source/geniesim/assets/robot/G2_omnipicker/configuration/robot_base.usd
+!source/geniesim/assets/robot/G2_omnipicker/configuration/Cam_L.usd
+!source/geniesim/assets/robot/G2_omnipicker/configuration/Cam_R.usd
+!source/geniesim/assets/robot/G2_omnipicker/configuration/robot_physics.usd
+!source/geniesim/assets/robot/G2_omnipicker/configuration/robot_sensor.usd
+!source/geniesim/assets/robot/G2_omnipicker/configuration/robot_robot.usd
+!source/geniesim/assets/robot/curobo_robot/
+!source/geniesim/assets/robot/curobo_robot/assets/
+!source/geniesim/assets/robot/curobo_robot/assets/robot/
+!source/geniesim/assets/robot/curobo_robot/assets/robot/G2/
+source/geniesim/assets/robot/curobo_robot/assets/robot/G2/*
+!source/geniesim/assets/robot/curobo_robot/assets/robot/G2/G2_omnipicker_fixed_dual.urdf
+
 **/*.egg-info

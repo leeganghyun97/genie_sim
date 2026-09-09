@@ -1,0 +1,30 @@
+{
+  "schema": "geniesim_g2_recurrent_profiles_v1",
+  "default_profile": "legacy_256x16",
+  "profiles": {
+    "temporal_128x32": {
+      "hidden_dim": 128,
+      "gru_num_layers": 1,
+      "sequence_length": 32,
+      "burn_in_steps": 8,
+      "sequence_stride": 24,
+      "gradient_clip": 1.0
+    },
+    "temporal_128x48": {
+      "hidden_dim": 128,
+      "gru_num_layers": 1,
+      "sequence_length": 48,
+      "burn_in_steps": 12,
+      "sequence_stride": 36,
+      "gradient_clip": 1.0
+    },
+    "legacy_256x16": {
+      "hidden_dim": 256,
+      "gru_num_layers": 1,
+      "sequence_length": 16,
+      "burn_in_steps": 4,
+      "sequence_stride": 12,
+      "gradient_clip": 5.0
+    }
+  }
+}

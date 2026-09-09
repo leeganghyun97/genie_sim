@@ -1,0 +1,43 @@
+{
+  "schema": "geniesim_g2_clone_manifest_v1",
+  "recipe": "configs/model/g2_recurrent_visual_preloss_v2.json",
+  "entrypoint": "scripts/run_g2_recurrent_visual_teacher_preloss_v2.sh",
+  "required_source_roots": [
+    "source/geniesim/rl/isaaclab"
+  ],
+  "required_files_sha256": {
+    "source/geniesim/assets/robot/G2_omnipicker/robot_fix.usda": "7751a265b02b1c4f6d290a1555d5bb8f2750b7280e66cb6a94042954dc032132",
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/robot_base.usd": "6abf3888859bc2385bd084bcdeec8fe464891110d61d3fa9ef1c7efd5a690488",
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/Cam_L.usd": "f9a76dcb1e5e451554917702cf03d5df52f7299bf7ab7e36e896109ca44ae8c8",
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/Cam_R.usd": "2dcb93e617198af75d53241782deceea454204758e58fd9d64028176d3371b7d",
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/robot_physics.usd": "1680e1dc7ea75a2585144eee33b1224284a80f5d25c9dacfd0caa0b9170040f2",
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/robot_sensor.usd": "d32e25c7daf3f7fdd008086f37e7f95dd2198a1bf94068c72defd7fdf81053f3",
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/robot_robot.usd": "a7f5238b029832980a6fd82a224a822781e7a121c15e4fcc29c8b71c32b4cae4",
+    "source/geniesim/assets/robot/curobo_robot/assets/robot/G2/G2_omnipicker_fixed_dual.urdf": "a5efa8eba603ee259ef502b2b371875764ecbf161776a46559fce654ada9af09"
+  },
+  "required_runtime_files": [
+    ".gitattributes",
+    ".gitignore",
+    "source/geniesim/.gitignore",
+    "source/geniesim/rl/__init__.py",
+    "source/geniesim/rl/sac/__init__.py",
+    "source/geniesim/rl/sac/stage2_logging.py",
+    "source/geniesim/rl/sac/stage2_sac.py",
+    "configs/model/g2_recurrent_profiles.json",
+    "configs/model/g2_recurrent_visual_preloss_v2.json",
+    "configs/repro/g2_recurrent_visual_preloss_v2_environment.json",
+    "scripts/run_g2_recurrent_visual_teacher_supervisor.sh",
+    "scripts/run_g2_recurrent_visual_teacher_preloss_v2.sh",
+    "scripts/diagnostics/run_g2_recurrent_visual_teacher_supervisor.py",
+    "scripts/diagnostics/g2_visual_reverse_sac_phase.py",
+    "scripts/check_g2_preloss_v2_clone_readiness.py"
+  ],
+  "git_lfs_patterns": [
+    "source/geniesim/assets/robot/G2_omnipicker/configuration/*.usd"
+  ],
+  "external_not_in_git": {
+    "isaac_python": "Set G2_VISUAL_TEACHER_PYTHON to an Isaac Lab/Isaac Sim Python executable",
+    "demonstration_hdf5": "Set colon-separated G2_DEMONSTRATION_DATASETS or pass repeated --demonstration-dataset",
+    "output": "Set G2_VISUAL_TEACHER_OUTPUT_ROOT; outputs, replay and checkpoints are intentionally ignored"
+  }
+}

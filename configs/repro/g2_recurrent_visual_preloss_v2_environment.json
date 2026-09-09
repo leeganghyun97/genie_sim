@@ -1,0 +1,20 @@
+{
+  "schema": "geniesim_g2_recurrent_visual_environment_v1",
+  "python": "3.12.14",
+  "isaac_sim": "6.0.1.0",
+  "isaac_lab": {
+    "tag": "v3.0.0-beta2.patch1",
+    "commit": "ffff603eafc6b74264a5261cc0183d6a65390d78"
+  },
+  "python_packages": {
+    "torch": "2.10.0+cu128",
+    "h5py": "3.16.0",
+    "wandb": "0.26.1"
+  },
+  "external_environment": true,
+  "notes": [
+    "Isaac Sim and Isaac Lab are not vendored into this repository.",
+    "Set G2_VISUAL_TEACHER_PYTHON to the compatible environment executable.",
+    "The pip distribution named isaaclab reports 6.1.14; the authoritative Isaac Lab source checkout is the pinned tag and commit above."
+  ]
+}
